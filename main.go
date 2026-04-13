@@ -18,6 +18,7 @@ type cliCommand struct {
 type Config struct {
 	Next string
 	Prev string
+	Pokedex map[string]string
 }
 
 func commandExit(cfg *Config, args[] string) error {
@@ -94,6 +95,72 @@ func commandExplore(cfg *Config, args []string) error {
 	return nil
 }
 
+func commandCatch(cfg *Config, args []string) error {
+	if len(args) != 1 {
+		fmt.Println("You must provide a pokemon to catch")
+		return nil
+	}
+	_, exists := cfg.Pokedex[args[0]]
+	if exists {
+		return fmt.Errorf("%s already in Pokedex!", args[0])
+	}
+
+	caught, err := pokeapi.CatchPokemon(args[0], cache)
+	if err != nil {
+		fmt.Printf("Error fetching data: %s\n", err)
+		return err
+	}
+
+	fmt.Printf("Throwing a Pokeball at %s...\n", args[0])
+	if caught {
+		cfg.Pokedex[args[0]] = args[0]
+		fmt.Printf("%s was caught!\n", args[0])
+	} else {
+		fmt.Printf("%s was not caught! Try again.\n",args[0])
+	}
+	
+	return nil
+}
+
+func commandInspect(cfg *Config, args []string) error {
+	if len(args) != 1 {
+		fmt.Println("You must provide a pokemon to inspect")
+		return nil
+	}
+	pokemon, ok := cfg.Pokedex[args[0]]
+	if !ok {
+		return fmt.Errorf("%s is not in your pokedex", args[0])
+	}
+
+	details, err := pokeapi.GetPokemonDetails(pokemon, cache)
+	if err != nil {
+		fmt.Printf("Error fetching data: %s\n", err)
+		return err
+	}
+
+	fmt.Printf("Name: %s\n", details.Name)
+	fmt.Printf("Height: %d\n", details.Height)
+	fmt.Printf("Weight: %d\n", details.Weight)
+	fmt.Printf("Stats:\n")
+	for _, stat := range details.Stats {
+		fmt.Printf("  -%s: %d\n", stat.Stat.Name, stat.BaseStat)
+	}
+	fmt.Printf("Types:\n")
+	for _, typ := range details.Types {
+		fmt.Printf("  -%s\n", typ.Type.Name)
+	}
+	return nil
+}
+
+func commandPokedex(cfg *Config, args []string) error {
+	fmt.Println("Your Pokedex:")
+	for p := range cfg.Pokedex {
+		fmt.Printf(" - %s\n", p)
+	}
+	fmt.Println("End of Pokedex")
+	return nil
+}
+
 type CommandRegistry map[string]cliCommand
 
 var commandRegistry CommandRegistry
@@ -126,6 +193,21 @@ func init() {
 			description: "Explore a location",
 			callback:    commandExplore,
 		},
+		"catch": {
+			name:					"catch",
+			description:	"Catch a pokemon",
+			callback:			commandCatch,
+		},
+		"inspect": {
+			name:					"inspect",
+			description:	"Inspect caught pokemon stats",
+			callback:			commandInspect,
+		},
+		"pokedex": {
+			name:					"pokedex",
+			description:	"Show your Pokedex",
+			callback:			commandPokedex,
+		},
 	}
 }
 
@@ -134,6 +216,7 @@ func main() {
 	cfg := Config{
 		Next: "https://pokeapi.co/api/v2/location-area?offset=0&limit=20",
 		Prev: "",
+		Pokedex: make(map[string]string),
 	}
 
 	for {
