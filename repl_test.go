@@ -84,7 +84,7 @@ func (m *mockTerminal) Println(args ...any) {
 }
 
 func (m *mockTerminal) Close() error        { return nil }
-func (m *mockTerminal) SetHistory([]string) {}
+func (m *mockTerminal) SetHistory([]string, int) {}
 
 // compile-time check
 var _ input.Terminal = (*mockTerminal)(nil)

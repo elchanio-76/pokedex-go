@@ -10,15 +10,19 @@ import (
 
 func startREPL(cfg *Config, reader input.Terminal) {
 	defer reader.Close()
-	reader.SetHistory(cfg.commandCache)
+	reader.SetHistory(cfg.commandCache, cfg.historyIndex)
 
 	for {
 		text, err := reader.ReadLine("Pokedex > ")
 		if err != nil {
 			break
 		}
+		if text == "" {
+			continue
+		}
 		cfg.commandCache = append(cfg.commandCache, text)
 		cfg.historyIndex = len(cfg.commandCache) // set history index to last command
+		reader.SetHistory(cfg.commandCache, cfg.historyIndex)
 
 		words := cleanInput(text)
 		cmd, ok := commandRegistry[words[0]]

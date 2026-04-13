@@ -11,7 +11,7 @@ import (
 
 type Terminal interface {
 	ReadLine(prompt string) (string, error)
-	SetHistory([]string)
+	SetHistory([]string, int)
 	Close() error
 	Print(format string, args ...any)
 	Println(args ...any)
@@ -42,7 +42,7 @@ func (lr *lineReader) Println(args ...any) {
 	fmt.Println(args...)
 }
 
-func (lr *lineReader) SetHistory(history []string) {
+func (lr *lineReader) SetHistory(history []string, index int) {
     // not supported with plain scanner
     
 }
@@ -64,6 +64,8 @@ type termReader struct {
 	term *term.Terminal
 	oldState *term.State
 	fd int
+	history []string
+	historyIndex int
 }
 
 func NewTerminalReader() Terminal {
@@ -77,6 +79,7 @@ func NewTerminalReader() Terminal {
 		term: term.NewTerminal(os.Stdin, ""),
 		oldState: oldState,
 		fd: fd,
+		history: []string{},
 	}
 }
 
@@ -85,8 +88,9 @@ func (tr *termReader) Close() error {
     return term.Restore(tr.fd, tr.oldState)
 }
 
-func (tr *termReader) SetHistory(history []string) {
-	// to be implemented
+func (tr *termReader) SetHistory(history []string, index int) {
+	tr.history = history
+	tr.historyIndex = index
 }
 
 func translateCRLF(s string) string {
@@ -121,6 +125,13 @@ func (tr *termReader) ReadLine(prompt string) (string, error) {
 			}
 			
 			switch b {
+			case  3: // ctrl-c
+					tr.term.Write([]byte("^C\r\n"))
+					return "", fmt.Errorf("interrupted")
+
+			case 4: // eof (ctrl-d)
+					tr.term.Write([]byte("^D\r\n"))
+					return string(line), fmt.Errorf("EOF")
 			case '\r', '\n':
 					tr.term.Write([]byte("\r\n"))
 					return string(line), nil
@@ -135,9 +146,26 @@ func (tr *termReader) ReadLine(prompt string) (string, error) {
 					if seq[0] == '[' {
 							switch seq[1] {
 							case 'A': // up arrow
-									tr.term.Write([]byte("UP ARROW\r\n"))
+									newIndex := tr.historyIndex-1
+									if newIndex < 0 {
+											newIndex = 0
+											tr.term.Write([]byte("\a"))
+									}
+									tr.historyIndex = newIndex
+									tr.term.Write([]byte("\r" + prompt + strings.Repeat(" ", len(line)) + "\r" + prompt + tr.history[newIndex]))
+									line=[]byte(tr.history[newIndex])
+									
 							case 'B': // down arrow
-									tr.term.Write([]byte("DOWN ARROW\r\n"))
+									newIndex := tr.historyIndex+1
+									if newIndex >=len(tr.history) {
+											newIndex = len(tr.history)-1
+											tr.term.Write([]byte("\a"))
+									} else {
+										tr.historyIndex = newIndex
+									}
+									//erase line before overwriting
+									tr.term.Write([]byte("\r" + prompt + strings.Repeat(" ", len(line)) + "\r" + prompt+tr.history[newIndex]))
+									line=[]byte(tr.history[newIndex])
 							}
 					}
 			default:

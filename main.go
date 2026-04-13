@@ -26,6 +26,7 @@ type Config struct {
 
 func commandExit(cfg *Config, args []string, t input.Terminal) error {
 	t.Println("Closing the Pokedex... Goodbye!")
+	t.Close()
 	os.Exit(0)
 	return nil
 }
