@@ -1,11 +1,34 @@
 package main
 
 import (
-	_ "fmt"
+	"fmt"
 	"strings"
+	"bufio"
+	"os"
 )
 
-
+func startREPL(cfg *Config) {
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		fmt.Print("Pokedex > ")
+		if !scanner.Scan() {
+			break
+		}
+		text := scanner.Text()
+		cfg.commandCache = append(cfg.commandCache, text)
+		words := cleanInput(text)
+		cmd, ok := commandRegistry[words[0]]
+		if !ok {
+			fmt.Printf("Unknown command %s\n", words[0])
+			continue
+		}
+		args := words[1:]
+		err := cmd.callback(cfg, args)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
 
 func cleanInput(text string) []string {
 	var result []string

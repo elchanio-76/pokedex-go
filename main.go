@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bufio"
+	_ "bufio"
 	"fmt"
 	"os"
 
@@ -19,6 +19,8 @@ type Config struct {
 	Next string
 	Prev string
 	Pokedex map[string]string
+	commandCache []string
+	historyIndex int
 }
 
 func commandExit(cfg *Config, args[] string) error {
@@ -212,31 +214,15 @@ func init() {
 }
 
 func main() {
-	scanner := bufio.NewScanner(os.Stdin)
+	
 	cfg := Config{
 		Next: "https://pokeapi.co/api/v2/location-area?offset=0&limit=20",
 		Prev: "",
 		Pokedex: make(map[string]string),
+		commandCache: []string{},
 	}
 
-	for {
-		fmt.Print("Pokedex > ")
-		if !scanner.Scan() {
-			break
-		}
-		text := scanner.Text()
-		words := cleanInput(text)
-		cmd, ok := commandRegistry[words[0]]
-		if !ok {
-			fmt.Printf("Unknown command %s\n", words[0])
-			continue
-		}
-		args := words[1:]
-		err := cmd.callback(&cfg, args)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
+	startREPL(&cfg)
 }
 
 
