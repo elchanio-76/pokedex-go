@@ -13,7 +13,7 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(cfg *Config, args []string) error
+	callback    func(cfg *Config, args []string, t input.Terminal) error
 }
 
 type Config struct {
@@ -24,35 +24,35 @@ type Config struct {
 	historyIndex int
 }
 
-func commandExit(cfg *Config, args[] string) error {
-	fmt.Println("Closing the Pokedex... Goodbye!")
+func commandExit(cfg *Config, args []string, t input.Terminal) error {
+	t.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(cfg *Config, args [] string) error {
-	fmt.Printf("Welcome to the Pokedex!\nUsage:\n\n")
+func commandHelp(cfg *Config, args []string, t input.Terminal) error {
+	t.Print("Welcome to the Pokedex!\nUsage:\n\n")
 	for _, cmd := range commandRegistry {
-		fmt.Printf("  %s: %s\n", cmd.name, cmd.description)
+		t.Print("  %s: %s\n", cmd.name, cmd.description)
 	}
 	return nil
 }
 
 
-func commandMap(cfg *Config, args []string) error {
+func commandMap(cfg *Config, args []string, t input.Terminal) error {
 	if cfg.Next == "" {
-		fmt.Println("You're on the last page!")
+		t.Println("You're on the last page!")
 		return nil
 	}
 
 	res, err := pokeapi.GetLocationAreas(cfg.Next, cache)
 	if err != nil {
-		fmt.Printf("Error fetching data: %s\n", err)
+		t.Print("Error fetching data: %s\n", err)
 		return err
 	}
 	
 	for _, area := range res.Results {
-		fmt.Printf("  %s\n", area.Name)
+		t.Print("  %s\n", area.Name)
 	}
 	cfg.Next = res.Next
 	cfg.Prev = res.Previous
@@ -60,47 +60,47 @@ func commandMap(cfg *Config, args []string) error {
 	return nil
 }
 
-func commandMapBack(cfg *Config, args []string) error {
+func commandMapBack(cfg *Config, args []string, t input.Terminal) error {
 	if cfg.Prev == "" {
-		fmt.Println("You're on the first page!")
+		t.Println("You're on the first page!")
 		return nil
 	}
 	res, err := pokeapi.GetLocationAreas(cfg.Prev, cache)
 	if err != nil {
-		fmt.Printf("Error fetching data: %s\n", err)
+		t.Print("Error fetching data: %s\n", err)
 		return err
 	}
 
 	for _, area := range res.Results {
-		fmt.Printf("  %s\n", area.Name)
+		t.Print("  %s\n", area.Name)
 	}
 	cfg.Next = res.Next
 	cfg.Prev = res.Previous
 	return nil
 }
 
-func commandExplore(cfg *Config, args []string) error {
+func commandExplore(cfg *Config, args []string, t input.Terminal) error {
 	if len(args) != 1 {
-		fmt.Println("You must provide a location area to explore")
+		t.Println("You must provide a location area to explore")
 		return nil
 	}
 	
 	res, err := pokeapi.GetLocationAreaDetails(args[0], cache)
 	if err != nil {
-		fmt.Printf("Error fetching data: %s\n", err)
+		t.Print("Error fetching data: %s\n", err)
 		return err
 	}
 
-	fmt.Printf("Pokemons in %s:\n", args[0])
+	t.Print("Pokemons in %s:\n", args[0])
 	for _, pokemon := range res.PokemonEncounters {
-		fmt.Printf("  - %s\n", pokemon.Pokemon.Name)
+		t.Print("  - %s\n", pokemon.Pokemon.Name)
 	}
 	return nil
 }
 
-func commandCatch(cfg *Config, args []string) error {
+func commandCatch(cfg *Config, args []string, t input.Terminal) error {
 	if len(args) != 1 {
-		fmt.Println("You must provide a pokemon to catch")
+		t.Println("You must provide a pokemon to catch")
 		return nil
 	}
 	_, exists := cfg.Pokedex[args[0]]
@@ -110,24 +110,24 @@ func commandCatch(cfg *Config, args []string) error {
 
 	caught, err := pokeapi.CatchPokemon(args[0], cache)
 	if err != nil {
-		fmt.Printf("Error fetching data: %s\n", err)
+		t.Print("Error fetching data: %s\n", err)
 		return err
 	}
 
-	fmt.Printf("Throwing a Pokeball at %s...\n", args[0])
+	t.Print("Throwing a Pokeball at %s...\n", args[0])
 	if caught {
 		cfg.Pokedex[args[0]] = args[0]
-		fmt.Printf("%s was caught!\n", args[0])
+		t.Print("%s was caught!\n", args[0])
 	} else {
-		fmt.Printf("%s was not caught! Try again.\n",args[0])
+		t.Print("%s was not caught! Try again.\n", args[0])
 	}
 	
 	return nil
 }
 
-func commandInspect(cfg *Config, args []string) error {
+func commandInspect(cfg *Config, args []string, t input.Terminal) error {
 	if len(args) != 1 {
-		fmt.Println("You must provide a pokemon to inspect")
+		t.Println("You must provide a pokemon to inspect")
 		return nil
 	}
 	pokemon, ok := cfg.Pokedex[args[0]]
@@ -137,30 +137,30 @@ func commandInspect(cfg *Config, args []string) error {
 
 	details, err := pokeapi.GetPokemonDetails(pokemon, cache)
 	if err != nil {
-		fmt.Printf("Error fetching data: %s\n", err)
+		t.Print("Error fetching data: %s\n", err)
 		return err
 	}
 
-	fmt.Printf("Name: %s\n", details.Name)
-	fmt.Printf("Height: %d\n", details.Height)
-	fmt.Printf("Weight: %d\n", details.Weight)
-	fmt.Printf("Stats:\n")
+	t.Print("Name: %s\n", details.Name)
+	t.Print("Height: %d\n", details.Height)
+	t.Print("Weight: %d\n", details.Weight)
+	t.Print("Stats:\n")
 	for _, stat := range details.Stats {
-		fmt.Printf("  -%s: %d\n", stat.Stat.Name, stat.BaseStat)
+		t.Print("  -%s: %d\n", stat.Stat.Name, stat.BaseStat)
 	}
-	fmt.Printf("Types:\n")
+	t.Print("Types:\n")
 	for _, typ := range details.Types {
-		fmt.Printf("  -%s\n", typ.Type.Name)
+		t.Print("  -%s\n", typ.Type.Name)
 	}
 	return nil
 }
 
-func commandPokedex(cfg *Config, args []string) error {
-	fmt.Println("Your Pokedex:")
+func commandPokedex(cfg *Config, args []string, t input.Terminal) error {
+	t.Println("Your Pokedex:")
 	for p := range cfg.Pokedex {
-		fmt.Printf(" - %s\n", p)
+		t.Print(" - %s\n", p)
 	}
-	fmt.Println("End of Pokedex")
+	t.Println("End of Pokedex")
 	return nil
 }
 
@@ -221,9 +221,11 @@ func main() {
 		Prev: "",
 		Pokedex: make(map[string]string),
 		commandCache: []string{},
+		historyIndex: 0,
 	}
-	reader := input.NewLineReader()
+	var reader input.Terminal = input.NewTerminalReader()
 	startREPL(&cfg, reader)
+	
 }
 
 

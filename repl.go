@@ -1,15 +1,14 @@
 package main
 
 import (
-	"fmt"
+	_ "bufio"
+	_ "os"
 	"strings"
-	_"bufio"
-	_"os"
 
 	"pokedex-go/internal/input"
 )
 
-func startREPL(cfg *Config, reader input.LineReader) {
+func startREPL(cfg *Config, reader input.Terminal) {
 	defer reader.Close()
 	reader.SetHistory(cfg.commandCache)
 
@@ -19,16 +18,18 @@ func startREPL(cfg *Config, reader input.LineReader) {
 			break
 		}
 		cfg.commandCache = append(cfg.commandCache, text)
+		cfg.historyIndex = len(cfg.commandCache) // set history index to last command
+
 		words := cleanInput(text)
 		cmd, ok := commandRegistry[words[0]]
 		if !ok {
-			fmt.Printf("Unknown command %s\n", words[0])
+			reader.Print("Unknown command %s\n", words[0])
 			continue
 		}
 		args := words[1:]
-		err = cmd.callback(cfg, args)
+		err = cmd.callback(cfg, args, reader)
 		if err != nil {
-			fmt.Println(err)
+			reader.Println(err)
 		}
 	}
 }

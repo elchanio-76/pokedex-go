@@ -412,7 +412,7 @@ func GetLocationAreaDetails(locationName string, c *pokecache.Cache) (LocationAr
 func GetPokemonDetails(pokemonName string, c *pokecache.Cache) (p Pokemon, e error) {
 
 	url := fmt.Sprintf("https://pokeapi.co/api/v2/pokemon/%s", pokemonName)
-	val, ok := c.Get(fmt.Sprintf(url))
+	val, ok := c.Get(url)
 	if ok {
 		buf := bytes.NewBuffer(val)
 		json.NewDecoder(buf).Decode(&p)
@@ -441,7 +441,7 @@ func CatchPokemon(pokemonName string, c *pokecache.Cache) (success bool, e error
 	chance := rand.Float64()
 	threshold := 20/float64(pokemon.BaseExperience)
 	success = chance < threshold
-	fmt.Printf("Chance: %f - Threshold: %f\n", chance, threshold)
+	//fmt.Printf("Chance: %f - Threshold: %f\n", chance, threshold)
 
 	return success, nil
 }
