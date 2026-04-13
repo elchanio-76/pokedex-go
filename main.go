@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"pokedex-go/internal/input"
 	"pokedex-go/internal/pokeapi"
 	"pokedex-go/internal/pokecache"
 )
@@ -221,8 +222,8 @@ func main() {
 		Pokedex: make(map[string]string),
 		commandCache: []string{},
 	}
-
-	startREPL(&cfg)
+	reader := input.NewLineReader()
+	startREPL(&cfg, reader)
 }
 
 

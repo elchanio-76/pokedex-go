@@ -3,18 +3,21 @@ package main
 import (
 	"fmt"
 	"strings"
-	"bufio"
-	"os"
+	_"bufio"
+	_"os"
+
+	"pokedex-go/internal/input"
 )
 
-func startREPL(cfg *Config) {
-	scanner := bufio.NewScanner(os.Stdin)
+func startREPL(cfg *Config, reader input.LineReader) {
+	defer reader.Close()
+	reader.SetHistory(cfg.commandCache)
+
 	for {
-		fmt.Print("Pokedex > ")
-		if !scanner.Scan() {
+		text, err := reader.ReadLine("Pokedex > ")
+		if err != nil {
 			break
 		}
-		text := scanner.Text()
 		cfg.commandCache = append(cfg.commandCache, text)
 		words := cleanInput(text)
 		cmd, ok := commandRegistry[words[0]]
@@ -23,7 +26,7 @@ func startREPL(cfg *Config) {
 			continue
 		}
 		args := words[1:]
-		err := cmd.callback(cfg, args)
+		err = cmd.callback(cfg, args)
 		if err != nil {
 			fmt.Println(err)
 		}
