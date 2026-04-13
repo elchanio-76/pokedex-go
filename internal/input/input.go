@@ -160,9 +160,8 @@ func (tr *termReader) ReadLine(prompt string) (string, error) {
 									if newIndex >=len(tr.history) {
 											newIndex = len(tr.history)-1
 											tr.term.Write([]byte("\a"))
-									} else {
-										tr.historyIndex = newIndex
 									}
+									tr.historyIndex = newIndex
 									//erase line before overwriting
 									tr.term.Write([]byte("\r" + prompt + strings.Repeat(" ", len(line)) + "\r" + prompt+tr.history[newIndex]))
 									line=[]byte(tr.history[newIndex])

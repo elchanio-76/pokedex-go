@@ -420,8 +420,8 @@ func GetPokemonDetails(pokemonName string, c *pokecache.Cache) (p Pokemon, e err
 	}
 
 	res, err := http.Get(url)
-	if err != nil {
-		return Pokemon{}, fmt.Errorf("Error getting pokemon details: %s",err)
+	if err != nil || res.StatusCode != http.StatusOK {
+		return Pokemon{}, fmt.Errorf("Error getting pokemon details: %s, Error: %v",pokemonName, err)
 	}
 	defer res.Body.Close()
 
