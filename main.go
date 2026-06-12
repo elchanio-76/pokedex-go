@@ -10,6 +10,16 @@ import (
 	"pokedex-go/internal/pokecache"
 )
 
+var Reset = "\033[0m"
+var Red = "\033[31m"
+var Green = "\033[32m"
+var Yellow = "\033[33m"
+var Blue = "\033[34m"
+var Magenta = "\033[35m"
+var Cyan = "\033[36m"
+var Gray = "\033[37m"
+var White = "\033[97m"
+
 type cliCommand struct {
 	name        string
 	description string
@@ -17,9 +27,9 @@ type cliCommand struct {
 }
 
 type Config struct {
-	Next string
-	Prev string
-	Pokedex map[string]string
+	Next         string
+	Prev         string
+	Pokedex      map[string]string
 	commandCache []string
 	historyIndex int
 }
@@ -39,7 +49,6 @@ func commandHelp(cfg *Config, args []string, t input.Terminal) error {
 	return nil
 }
 
-
 func commandMap(cfg *Config, args []string, t input.Terminal) error {
 	if cfg.Next == "" {
 		t.Println("You're on the last page!")
@@ -51,7 +60,7 @@ func commandMap(cfg *Config, args []string, t input.Terminal) error {
 		t.Print("Error fetching data: %s\n", err)
 		return err
 	}
-	
+
 	for _, area := range res.Results {
 		t.Print("  %s\n", area.Name)
 	}
@@ -63,17 +72,17 @@ func commandMap(cfg *Config, args []string, t input.Terminal) error {
 
 func commandMapBack(cfg *Config, args []string, t input.Terminal) error {
 	if cfg.Prev == "" {
-		t.Println("You're on the first page!")
+		t.Println(Red + "You're on the first page!" + Reset)
 		return nil
 	}
 	res, err := pokeapi.GetLocationAreas(cfg.Prev, cache)
 	if err != nil {
-		t.Print("Error fetching data: %s\n", err)
+		t.Print(Red+"Error fetching data: %s\n"+Reset, err)
 		return err
 	}
 
 	for _, area := range res.Results {
-		t.Print("  %s\n", area.Name)
+		t.Print(Blue+"  %s\n"+Reset, area.Name)
 	}
 	cfg.Next = res.Next
 	cfg.Prev = res.Previous
@@ -82,63 +91,63 @@ func commandMapBack(cfg *Config, args []string, t input.Terminal) error {
 
 func commandExplore(cfg *Config, args []string, t input.Terminal) error {
 	if len(args) != 1 {
-		t.Println("You must provide a location area to explore")
+		t.Println(Red + "You must provide a location area to explore" + Reset)
 		return nil
 	}
-	
+
 	res, err := pokeapi.GetLocationAreaDetails(args[0], cache)
 	if err != nil {
-		t.Print("Error fetching data: %s\n", err)
+		t.Print(Red+"Error fetching data: %s\n"+Reset, err)
 		return err
 	}
 
 	t.Print("Pokemons in %s:\n", args[0])
 	for _, pokemon := range res.PokemonEncounters {
-		t.Print("  - %s\n", pokemon.Pokemon.Name)
+		t.Print(Blue+"  - %s\n"+Reset, pokemon.Pokemon.Name)
 	}
 	return nil
 }
 
 func commandCatch(cfg *Config, args []string, t input.Terminal) error {
 	if len(args) != 1 {
-		t.Println("You must provide a pokemon to catch")
+		t.Println(Red + "You must provide a pokemon to catch" + Reset)
 		return nil
 	}
 	_, exists := cfg.Pokedex[args[0]]
 	if exists {
-		return fmt.Errorf("%s already in Pokedex!", args[0])
+		return fmt.Errorf(Red+"%s already in Pokedex!"+Reset, args[0])
 	}
 
 	caught, err := pokeapi.CatchPokemon(args[0], cache)
 	if err != nil {
-		t.Print("Error fetching data: %s\n", err)
+		t.Print(Red+"Error fetching data: %s\n"+Reset, err)
 		return err
 	}
 
-	t.Print("Throwing a Pokeball at %s...\n", args[0])
+	t.Print(Yellow+"Throwing a Pokeball at %s...\n"+Reset, args[0])
 	if caught {
 		cfg.Pokedex[args[0]] = args[0]
-		t.Print("%s was caught!\n", args[0])
+		t.Print(Green+"%s was caught!\n"+Reset, args[0])
 	} else {
-		t.Print("%s was not caught! Try again.\n", args[0])
+		t.Print(Magenta+"%s was not caught! Try again.\n"+Reset, args[0])
 	}
-	
+
 	return nil
 }
 
 func commandInspect(cfg *Config, args []string, t input.Terminal) error {
 	if len(args) != 1 {
-		t.Println("You must provide a pokemon to inspect")
+		t.Println(Red + "You must provide a pokemon to inspect" + Reset)
 		return nil
 	}
 	pokemon, ok := cfg.Pokedex[args[0]]
 	if !ok {
-		return fmt.Errorf("%s is not in your pokedex", args[0])
+		return fmt.Errorf(Red+"%s is not in your pokedex"+Reset, args[0])
 	}
 
 	details, err := pokeapi.GetPokemonDetails(pokemon, cache)
 	if err != nil {
-		t.Print("Error fetching data: %s\n", err)
+		t.Print(Red+"Error fetching data: %s\n"+Reset, err)
 		return err
 	}
 
@@ -147,11 +156,11 @@ func commandInspect(cfg *Config, args []string, t input.Terminal) error {
 	t.Print("Weight: %d\n", details.Weight)
 	t.Print("Stats:\n")
 	for _, stat := range details.Stats {
-		t.Print("  -%s: %d\n", stat.Stat.Name, stat.BaseStat)
+		t.Print(Green+"  -%s: %d\n"+Reset, stat.Stat.Name, stat.BaseStat)
 	}
 	t.Print("Types:\n")
 	for _, typ := range details.Types {
-		t.Print("  -%s\n", typ.Type.Name)
+		t.Print(Cyan+"  -%s\n"+Reset, typ.Type.Name)
 	}
 	return nil
 }
@@ -159,7 +168,7 @@ func commandInspect(cfg *Config, args []string, t input.Terminal) error {
 func commandPokedex(cfg *Config, args []string, t input.Terminal) error {
 	t.Println("Your Pokedex:")
 	for p := range cfg.Pokedex {
-		t.Print(" - %s\n", p)
+		t.Print(Blue+" - %s\n"+Reset, p)
 	}
 	t.Println("End of Pokedex")
 	return nil
@@ -198,35 +207,33 @@ func init() {
 			callback:    commandExplore,
 		},
 		"catch": {
-			name:					"catch",
-			description:	"Catch a pokemon",
-			callback:			commandCatch,
+			name:        "catch",
+			description: "Catch a pokemon",
+			callback:    commandCatch,
 		},
 		"inspect": {
-			name:					"inspect",
-			description:	"Inspect caught pokemon stats",
-			callback:			commandInspect,
+			name:        "inspect",
+			description: "Inspect caught pokemon stats",
+			callback:    commandInspect,
 		},
 		"pokedex": {
-			name:					"pokedex",
-			description:	"Show your Pokedex",
-			callback:			commandPokedex,
+			name:        "pokedex",
+			description: "Show your Pokedex",
+			callback:    commandPokedex,
 		},
 	}
 }
 
 func main() {
-	
+
 	cfg := Config{
-		Next: "https://pokeapi.co/api/v2/location-area?offset=0&limit=20",
-		Prev: "",
-		Pokedex: make(map[string]string),
+		Next:         "https://pokeapi.co/api/v2/location-area?offset=0&limit=20",
+		Prev:         "",
+		Pokedex:      make(map[string]string),
 		commandCache: []string{},
 		historyIndex: 0,
 	}
 	var reader input.Terminal = input.NewTerminalReader()
 	startREPL(&cfg, reader)
-	
+
 }
-
-
