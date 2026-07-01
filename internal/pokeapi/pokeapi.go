@@ -10,14 +10,13 @@ import (
 	"pokedex-go/internal/pokecache"
 )
 
-type LocationAreas struct{
-
-	Count 		string `json:"count"`	
-	Results []struct{
+type LocationAreas struct {
+	Count   string `json:"count"`
+	Results []struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
 	} `json:"results"`
-	Next 	string `json:"next"`
+	Next     string `json:"next"`
 	Previous string `json:"previous"`
 }
 
@@ -72,6 +71,33 @@ type LocationAreaDetails struct {
 			} `json:"encounter_details"`
 		} `json:"version_details"`
 	} `json:"pokemon_encounters"`
+}
+
+type Location struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Areas []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"areas"`
+	Region struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"region"`
+	Names []struct {
+		Name     string `json:"name"`
+		Language struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"language"`
+	} `json:"names"`
+	GameIndices []struct {
+		GameIndex  int `json:"game_index"`
+		Generation struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"generation"`
+	} `json:"game_indices"`
 }
 
 type Pokemon struct {
@@ -359,7 +385,7 @@ type Pokemon struct {
 }
 
 func GetLocationAreas(url string, c *pokecache.Cache) (LocationAreas, error) {
-	
+
 	var locationAreas LocationAreas
 
 	val, ok := c.Get(url)
@@ -368,13 +394,13 @@ func GetLocationAreas(url string, c *pokecache.Cache) (LocationAreas, error) {
 		json.NewDecoder(buf).Decode(&locationAreas)
 		return locationAreas, nil
 	}
-	
+
 	res, err := http.Get(url)
 	if err != nil {
 		return LocationAreas{}, fmt.Errorf("Error getting Location Area: %v\n", err)
 	}
 	defer res.Body.Close()
-	
+
 	json.NewDecoder(res.Body).Decode(&locationAreas)
 	rawData, _ := json.Marshal(locationAreas)
 	c.Add(url, rawData)
@@ -384,7 +410,7 @@ func GetLocationAreas(url string, c *pokecache.Cache) (LocationAreas, error) {
 }
 
 func GetLocationAreaDetails(locationName string, c *pokecache.Cache) (LocationAreaDetails, error) {
-	
+
 	var locationAreaDetails LocationAreaDetails
 	url := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", locationName)
 
@@ -394,19 +420,47 @@ func GetLocationAreaDetails(locationName string, c *pokecache.Cache) (LocationAr
 		json.NewDecoder(buf).Decode(&locationAreaDetails)
 		return locationAreaDetails, nil
 	}
-	
 
 	res, err := http.Get(url)
 	if err != nil {
 		return LocationAreaDetails{}, fmt.Errorf("Error getting Location Area Details: %v\n", err)
 	}
 	defer res.Body.Close()
-	
+
 	json.NewDecoder(res.Body).Decode(&locationAreaDetails)
 	rawData, _ := json.Marshal(locationAreaDetails)
 	c.Add(url, rawData)
 
 	return locationAreaDetails, nil
+}
+
+func GetLocation(locationName string, c *pokecache.Cache) (Location, error) {
+
+	var location Location
+	url := fmt.Sprintf("https://pokeapi.co/api/v2/location/%s", locationName)
+
+	val, ok := c.Get(url)
+	if ok {
+		buf := bytes.NewBuffer(val)
+		json.NewDecoder(buf).Decode(&location)
+		return location, nil
+	}
+
+	res, err := http.Get(url)
+	if err != nil {
+		return Location{}, fmt.Errorf("Error getting Location: %v", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return Location{}, fmt.Errorf("Location '%s' not found", locationName)
+	}
+
+	json.NewDecoder(res.Body).Decode(&location)
+	rawData, _ := json.Marshal(location)
+	c.Add(url, rawData)
+
+	return location, nil
 }
 
 func GetPokemonDetails(pokemonName string, c *pokecache.Cache) (p Pokemon, e error) {
@@ -421,7 +475,7 @@ func GetPokemonDetails(pokemonName string, c *pokecache.Cache) (p Pokemon, e err
 
 	res, err := http.Get(url)
 	if err != nil || res.StatusCode != http.StatusOK {
-		return Pokemon{}, fmt.Errorf("Error getting pokemon details: %s, Error: %v",pokemonName, err)
+		return Pokemon{}, fmt.Errorf("Error getting pokemon details: %s, Error: %v", pokemonName, err)
 	}
 	defer res.Body.Close()
 
@@ -432,14 +486,14 @@ func GetPokemonDetails(pokemonName string, c *pokecache.Cache) (p Pokemon, e err
 	return p, nil
 }
 
-func CatchPokemon(pokemonName string, c *pokecache.Cache) (success bool, e error){
-	
+func CatchPokemon(pokemonName string, c *pokecache.Cache) (success bool, e error) {
+
 	pokemon, err := GetPokemonDetails(pokemonName, c)
-	if err!=nil {
+	if err != nil {
 		return false, err
 	}
 	chance := rand.Float64()
-	threshold := 20/float64(pokemon.BaseExperience)
+	threshold := 20 / float64(pokemon.BaseExperience)
 	success = chance < threshold
 	//fmt.Printf("Chance: %f - Threshold: %f\n", chance, threshold)
 

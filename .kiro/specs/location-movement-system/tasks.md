@@ -6,12 +6,12 @@ This plan implements a Location navigation layer on top of the existing Location
 
 ## Tasks
 
-- [ ] 1. Add Location struct and GetLocation API function
-  - [ ] 1.1 Define the `Location` struct in `internal/pokeapi/pokeapi.go`
+- [x] 1. Add Location struct and GetLocation API function
+  - [x] 1.1 Define the `Location` struct in `internal/pokeapi/pokeapi.go`
     - Add the `Location` struct with fields: ID (int), Name (string), Areas ([]struct{Name, URL string}), Region (struct{Name, URL string}), Names, GameIndices as defined in the design
     - _Requirements: 1.1, 5.1_
 
-  - [ ] 1.2 Implement `GetLocation` function in `internal/pokeapi/pokeapi.go`
+  - [x] 1.2 Implement `GetLocation` function in `internal/pokeapi/pokeapi.go`
     - Follow the same cache-check-then-fetch pattern used by `GetLocationAreaDetails`
     - Construct URL as `https://pokeapi.co/api/v2/location/<locationName>`
     - Check cache first, decode from cache if hit
@@ -19,7 +19,7 @@ This plan implements a Location navigation layer on top of the existing Location
     - Return `(Location, error)`
     - _Requirements: 1.1, 1.3, 5.1, 5.2, 5.3, 5.4_
 
-  - [ ]* 1.3 Write property test for GetLocation caching behavior
+  - [x] 1.3 Write property test for GetLocation caching behavior
     - **Property 1: Visit State Transition** (partial — cache storage)
     - **Validates: Requirements 5.1, 5.2**
     - Use `rapid` to generate random location name strings and verify that after a successful fetch, the cache contains the URL key
@@ -44,12 +44,12 @@ This plan implements a Location navigation layer on top of the existing Location
     - If both set: return `Cyan + "[Location: " + truncateName(locName, 30) + " | Area: " + truncateName(areaName, 30) + "] " + Reset + "Pokedex > "`
     - _Requirements: 4.1, 4.2, 4.3, 4.6_
 
-  - [ ]* 2.4 Write property test for `truncateName`
+  - [ ] 2.4 Write property test for `truncateName`
     - **Property 9: Name Truncation**
     - **Validates: Requirements 4.6**
     - Use `rapid` to generate random strings of varying lengths and verify: strings > 30 chars produce exactly 30 chars ending in "...", strings ≤ 30 return unchanged
 
-  - [ ]* 2.5 Write property test for `buildPrompt`
+  - [ ] 2.5 Write property test for `buildPrompt`
     - **Property 8: Prompt Building**
     - **Validates: Requirements 4.1, 4.2, 4.3**
     - Use `rapid` to generate random Config states (nil location, location set, area set) and verify the prompt format rules hold and always ends with "Pokedex > "
@@ -73,17 +73,17 @@ This plan implements a Location navigation layer on top of the existing Location
     - Callback: `commandVisit`
     - _Requirements: 6.1, 6.2_
 
-  - [ ]* 4.3 Write property test for visit state transition
+  - [ ] 4.3 Write property test for visit state transition
     - **Property 1: Visit State Transition**
     - **Validates: Requirements 1.1, 1.5, 2.8**
     - Generate random valid Location structs, simulate successful visit, assert CurrentLocation equals new data, CurrentArea is empty, ScopedPageIndex is 0
 
-  - [ ]* 4.4 Write property test for visit output format
+  - [ ] 4.4 Write property test for visit output format
     - **Property 2: Visit Output Contains Required Information**
     - **Validates: Requirements 1.2**
     - Generate random location name, region, and area list, verify output contains all three pieces of information
 
-  - [ ]* 4.5 Write property test for failed visit preserving state
+  - [ ] 4.5 Write property test for failed visit preserving state
     - **Property 3: Failed Visit Preserves State**
     - **Validates: Requirements 1.3**
     - Generate random initial Config state, simulate API failure, assert all Config fields remain unchanged
@@ -123,17 +123,17 @@ This plan implements a Location navigation layer on top of the existing Location
     - On success: set `cfg.CurrentArea = args[0]`, print "Pokemons in <area>:" followed by each encounter name prefixed with "  - "
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ]* 6.2 Write property test for area validation rejection
+  - [ ] 6.2 Write property test for area validation rejection
     - **Property 5: Area Validation Rejects Invalid Areas**
     - **Validates: Requirements 3.2**
     - Generate random Location and random area names NOT in the areas list, verify explore returns error and no API call is made
 
-  - [ ]* 6.3 Write property test for successful explore updating state
+  - [ ] 6.3 Write property test for successful explore updating state
     - **Property 6: Successful Explore Updates Active Area**
     - **Validates: Requirements 3.1, 3.4**
     - Generate random Location with non-empty areas, pick a valid area, verify Config.CurrentArea equals that area name after success
 
-  - [ ]* 6.4 Write property test for failed explore preserving state
+  - [ ] 6.4 Write property test for failed explore preserving state
     - **Property 7: Failed Explore Preserves State**
     - **Validates: Requirements 3.5**
     - Generate random initial Config, simulate API failure after validation passes, verify CurrentArea unchanged
@@ -144,7 +144,7 @@ This plan implements a Location navigation layer on top of the existing Location
     - Ensure prompt is recomputed each iteration so it reflects state changes from visit/explore commands
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ]* 7.2 Write unit tests for prompt integration
+  - [ ] 7.2 Write unit tests for prompt integration
     - Test default prompt when no location is set
     - Test prompt updates after visit and explore commands
     - Test truncation in prompt for long names
