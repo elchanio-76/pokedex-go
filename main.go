@@ -20,6 +20,15 @@ var Cyan = "\033[36m"
 var Gray = "\033[37m"
 var White = "\033[97m"
 
+const MaxNameLen = 30
+
+func truncateName(name string, maxLen int) string {
+	if len(name) > maxLen {
+		return name[:maxLen-3] + "..."
+	}
+	return name
+}
+
 type cliCommand struct {
 	name        string
 	description string
@@ -27,11 +36,14 @@ type cliCommand struct {
 }
 
 type Config struct {
-	Next         string
-	Prev         string
-	Pokedex      map[string]string
-	commandCache []string
-	historyIndex int
+	Next            string
+	Prev            string
+	Pokedex         map[string]string
+	CurrentLocation *pokeapi.Location
+	CurrentArea     string
+	ScopedPageIndex int
+	commandCache    []string
+	historyIndex    int
 }
 
 func commandExit(cfg *Config, args []string, t input.Terminal) error {

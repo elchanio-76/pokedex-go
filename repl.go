@@ -38,17 +38,27 @@ func startREPL(cfg *Config, reader input.Terminal) {
 	}
 }
 
+func buildPrompt(cfg *Config) string {
+	if cfg.CurrentLocation == nil {
+		return "Pokedex > "
+	}
+	if cfg.CurrentArea == "" {
+		return Cyan + "[Location: " + truncateName(cfg.CurrentLocation.Name, MaxNameLen) + "] " + Reset + "Pokedex > "
+	}
+	return Cyan + "[Location: " + truncateName(cfg.CurrentLocation.Name, MaxNameLen) + " | Area: " + truncateName(cfg.CurrentArea, MaxNameLen) + "] " + Reset + "Pokedex > "
+}
+
 func cleanInput(text string) []string {
 	var result []string
 
 	words := strings.Split(text, " ")
-	for i:=range words {
-		if strings.Trim(words[i]," ")=="" {
+	for i := range words {
+		if strings.Trim(words[i], " ") == "" {
 			continue
 		}
 
-		result = append(result, strings.ToLower(strings.Trim(words[i]," ")))
+		result = append(result, strings.ToLower(strings.Trim(words[i], " ")))
 	}
-	
+
 	return result
 }
