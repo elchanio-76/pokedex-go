@@ -38,6 +38,8 @@ type cliCommand struct {
 type Config struct {
 	Next            string
 	Prev            string
+	LocNext         string
+	LocPrev         string
 	Pokedex         map[string]string
 	CurrentLocation *pokeapi.Location
 	CurrentArea     string
@@ -119,6 +121,50 @@ func commandMapBack(cfg *Config, args []string, t input.Terminal) error {
 	for _, area := range areas[start:end] {
 		t.Print(Blue+"  %s\n"+Reset, area.Name)
 	}
+	return nil
+}
+
+func commandShowLoc(cfg *Config, args []string, t input.Terminal) error {
+	if cfg.LocNext == "" {
+		t.Println("No more locations to show!")
+		return nil
+	}
+
+	locations, err := pokeapi.GetLocations(cfg.LocNext, cache)
+	if err != nil {
+		t.Print("Error fetching locations: %s\n", err)
+		return nil
+	}
+
+	for _, loc := range locations.Results {
+		t.Print("  %s\n", loc.Name)
+	}
+
+	cfg.LocNext = locations.Next
+	cfg.LocPrev = locations.Previous
+
+	return nil
+}
+
+func commandShowLocBack(cfg *Config, args []string, t input.Terminal) error {
+	if cfg.LocPrev == "" {
+		t.Println("You're on the first page!")
+		return nil
+	}
+
+	locations, err := pokeapi.GetLocations(cfg.LocPrev, cache)
+	if err != nil {
+		t.Print("Error fetching locations: %s\n", err)
+		return nil
+	}
+
+	for _, loc := range locations.Results {
+		t.Print("  %s\n", loc.Name)
+	}
+
+	cfg.LocNext = locations.Next
+	cfg.LocPrev = locations.Previous
+
 	return nil
 }
 
@@ -301,6 +347,16 @@ func init() {
 			description: "Visit a location to explore its areas",
 			callback:    commandVisit,
 		},
+		"showloc": {
+			name:        "showloc",
+			description: "Show the next 20 locations",
+			callback:    commandShowLoc,
+		},
+		"showlocb": {
+			name:        "showlocb",
+			description: "Show the previous 20 locations",
+			callback:    commandShowLocBack,
+		},
 	}
 }
 
@@ -309,6 +365,8 @@ func main() {
 	cfg := Config{
 		Next:         "https://pokeapi.co/api/v2/location-area?offset=0&limit=20",
 		Prev:         "",
+		LocNext:      "https://pokeapi.co/api/v2/location?offset=0&limit=20",
+		LocPrev:      "",
 		Pokedex:      make(map[string]string),
 		commandCache: []string{},
 		historyIndex: 0,

@@ -20,6 +20,16 @@ type LocationAreas struct {
 	Previous string `json:"previous"`
 }
 
+type Locations struct {
+	Count   int `json:"count"`
+	Results []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"results"`
+	Next     string `json:"next"`
+	Previous string `json:"previous"`
+}
+
 type LocationAreaDetails struct {
 	ID                   int    `json:"id"`
 	Name                 string `json:"name"`
@@ -407,6 +417,30 @@ func GetLocationAreas(url string, c *pokecache.Cache) (LocationAreas, error) {
 
 	return locationAreas, nil
 
+}
+
+func GetLocations(url string, c *pokecache.Cache) (Locations, error) {
+
+	var locations Locations
+
+	val, ok := c.Get(url)
+	if ok {
+		buf := bytes.NewBuffer(val)
+		json.NewDecoder(buf).Decode(&locations)
+		return locations, nil
+	}
+
+	res, err := http.Get(url)
+	if err != nil {
+		return Locations{}, fmt.Errorf("Error getting Locations: %v\n", err)
+	}
+	defer res.Body.Close()
+
+	json.NewDecoder(res.Body).Decode(&locations)
+	rawData, _ := json.Marshal(locations)
+	c.Add(url, rawData)
+
+	return locations, nil
 }
 
 func GetLocationAreaDetails(locationName string, c *pokecache.Cache) (LocationAreaDetails, error) {
