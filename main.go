@@ -123,20 +123,39 @@ func commandMapBack(cfg *Config, args []string, t input.Terminal) error {
 }
 
 func commandExplore(cfg *Config, args []string, t input.Terminal) error {
+	if cfg.CurrentLocation == nil {
+		t.Println("No location set. Use 'visit <name>' to visit a location first")
+		return nil
+	}
+
 	if len(args) != 1 {
-		t.Println(Red + "You must provide a location area to explore" + Reset)
+		t.Println("You must provide a location area to explore")
+		return nil
+	}
+
+	// Validate area name against current location's areas
+	areaFound := false
+	for _, area := range cfg.CurrentLocation.Areas {
+		if area.Name == args[0] {
+			areaFound = true
+			break
+		}
+	}
+	if !areaFound {
+		t.Print("Area '%s' is not part of %s. Use 'map' to see available areas\n", args[0], cfg.CurrentLocation.Name)
 		return nil
 	}
 
 	res, err := pokeapi.GetLocationAreaDetails(args[0], cache)
 	if err != nil {
-		t.Print(Red+"Error fetching data: %s\n"+Reset, err)
-		return err
+		t.Print("Error fetching area details: %s\n", err)
+		return nil
 	}
 
+	cfg.CurrentArea = args[0]
 	t.Print("Pokemons in %s:\n", args[0])
 	for _, pokemon := range res.PokemonEncounters {
-		t.Print(Blue+"  - %s\n"+Reset, pokemon.Pokemon.Name)
+		t.Print("  - %s\n", pokemon.Pokemon.Name)
 	}
 	return nil
 }
