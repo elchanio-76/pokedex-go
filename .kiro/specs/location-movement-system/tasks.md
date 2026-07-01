@@ -92,23 +92,23 @@ Several foundational pieces are already in place: the `Location` struct, `GetLoc
 - [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Integrate dynamic prompt into REPL loop
-  - [-] 5.1 Update `startREPL` in `repl.go` to use `buildPrompt`
+- [x] 5. Integrate dynamic prompt into REPL loop
+  - [x] 5.1 Update `startREPL` in `repl.go` to use `buildPrompt`
     - Replace the hardcoded `"Pokedex > "` string in `reader.ReadLine(...)` with a call to `buildPrompt(cfg)`
     - Ensure prompt is recomputed each iteration so it reflects state changes from visit/explore commands
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 5.2 Write property test for prompt building
+  - [x] 5.2 Write property test for prompt building
     - **Property 8: Prompt Building**
     - **Validates: Requirements 4.1, 4.2, 4.3**
     - Use `rapid` to generate random Config states (nil location, location set, area set) and verify the prompt format rules hold and always ends with "Pokedex > "
 
-  - [ ] 5.3 Write property test for name truncation
+  - [x] 5.3 Write property test for name truncation
     - **Property 9: Name Truncation**
     - **Validates: Requirements 4.6**
     - Use `rapid` to generate random strings of varying lengths and verify: strings > 30 chars produce exactly 30 chars ending in "...", strings ≤ 30 return unchanged
 
-- [ ] 6. Final checkpoint - Ensure all tests pass
+- [x] 6. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

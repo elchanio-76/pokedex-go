@@ -13,7 +13,7 @@ func startREPL(cfg *Config, reader input.Terminal) {
 	reader.SetHistory(cfg.commandCache, cfg.historyIndex)
 
 	for {
-		text, err := reader.ReadLine("Pokedex > ")
+		text, err := reader.ReadLine(buildPrompt(cfg))
 		if err != nil {
 			break
 		}
