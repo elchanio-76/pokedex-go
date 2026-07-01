@@ -186,6 +186,29 @@ func commandPokedex(cfg *Config, args []string, t input.Terminal) error {
 	return nil
 }
 
+func commandVisit(cfg *Config, args []string, t input.Terminal) error {
+	if len(args) != 1 {
+		t.Println("You must provide a location name to visit")
+		return nil
+	}
+
+	loc, err := pokeapi.GetLocation(args[0], cache)
+	if err != nil {
+		t.Print("Location '%s' not found\n", args[0])
+		return nil
+	}
+
+	cfg.CurrentLocation = &loc
+	cfg.CurrentArea = ""
+	cfg.ScopedPageIndex = 0
+
+	t.Print(Green+"Location: %s\n"+Reset, loc.Name)
+	t.Print(Cyan+"Region: %s\n"+Reset, loc.Region.Name)
+	t.Print(Yellow+"Areas: %d\n"+Reset, len(loc.Areas))
+
+	return nil
+}
+
 type CommandRegistry map[string]cliCommand
 
 var commandRegistry CommandRegistry
@@ -232,6 +255,11 @@ func init() {
 			name:        "pokedex",
 			description: "Show your Pokedex",
 			callback:    commandPokedex,
+		},
+		"visit": {
+			name:        "visit",
+			description: "Visit a location to explore its areas",
+			callback:    commandVisit,
 		},
 	}
 }
