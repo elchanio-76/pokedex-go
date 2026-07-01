@@ -62,42 +62,63 @@ func commandHelp(cfg *Config, args []string, t input.Terminal) error {
 }
 
 func commandMap(cfg *Config, args []string, t input.Terminal) error {
-	if cfg.Next == "" {
+	if cfg.CurrentLocation == nil {
+		t.Println("No location set. Use 'visit <name>' to visit a location first")
+		return nil
+	}
+
+	areas := cfg.CurrentLocation.Areas
+	if len(areas) == 0 {
+		t.Println("This location has no areas")
+		return nil
+	}
+
+	start := cfg.ScopedPageIndex * 20
+	if start >= len(areas) {
 		t.Println("You're on the last page!")
 		return nil
 	}
 
-	res, err := pokeapi.GetLocationAreas(cfg.Next, cache)
-	if err != nil {
-		t.Print("Error fetching data: %s\n", err)
-		return err
+	end := (cfg.ScopedPageIndex + 1) * 20
+	if end > len(areas) {
+		end = len(areas)
 	}
 
-	for _, area := range res.Results {
+	for _, area := range areas[start:end] {
 		t.Print("  %s\n", area.Name)
 	}
-	cfg.Next = res.Next
-	cfg.Prev = res.Previous
+
+	cfg.ScopedPageIndex++
 
 	return nil
 }
 
 func commandMapBack(cfg *Config, args []string, t input.Terminal) error {
-	if cfg.Prev == "" {
-		t.Println(Red + "You're on the first page!" + Reset)
+	if cfg.CurrentLocation == nil {
+		t.Println("No location set. Use 'visit <name>' to visit a location first")
 		return nil
 	}
-	res, err := pokeapi.GetLocationAreas(cfg.Prev, cache)
-	if err != nil {
-		t.Print(Red+"Error fetching data: %s\n"+Reset, err)
-		return err
+	if len(cfg.CurrentLocation.Areas) == 0 {
+		t.Println("This location has no areas")
+		return nil
+	}
+	if cfg.ScopedPageIndex <= 0 {
+		t.Println("You're on the first page!")
+		return nil
 	}
 
-	for _, area := range res.Results {
+	cfg.ScopedPageIndex--
+
+	areas := cfg.CurrentLocation.Areas
+	start := cfg.ScopedPageIndex * 20
+	end := (cfg.ScopedPageIndex + 1) * 20
+	if end > len(areas) {
+		end = len(areas)
+	}
+
+	for _, area := range areas[start:end] {
 		t.Print(Blue+"  %s\n"+Reset, area.Name)
 	}
-	cfg.Next = res.Next
-	cfg.Prev = res.Previous
 	return nil
 }
 

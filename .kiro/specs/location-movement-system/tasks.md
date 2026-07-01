@@ -39,8 +39,8 @@ Several foundational pieces are already in place: the `Location` struct, `GetLoc
     - **Validates: Requirements 1.3**
     - Generate random initial Config state, simulate API failure, assert all Config fields remain unchanged
 
-- [-] 2. Modify `map`/`mapb` for scoped pagination
-  - [~] 2.1 Rewrite `commandMap` in `main.go` for scoped behavior
+- [x] 2. Modify `map`/`mapb` for scoped pagination
+  - [x] 2.1 Rewrite `commandMap` in `main.go` for scoped behavior
     - If `cfg.CurrentLocation == nil`: print "No location set. Use 'visit <name>' to visit a location first", return nil
     - If `len(cfg.CurrentLocation.Areas) == 0`: print "This location has no areas", return nil
     - Calculate page start: `cfg.ScopedPageIndex * 20`
@@ -50,7 +50,7 @@ Several foundational pieces are already in place: the `Location` struct, `GetLoc
     - Increment `cfg.ScopedPageIndex`
     - _Requirements: 2.1, 2.3, 2.5, 2.6, 2.7_
 
-  - [~] 2.2 Rewrite `commandMapBack` in `main.go` for scoped behavior
+  - [x] 2.2 Rewrite `commandMapBack` in `main.go` for scoped behavior
     - If `cfg.CurrentLocation == nil`: print "No location set. Use 'visit <name>' to visit a location first", return nil
     - If `len(cfg.CurrentLocation.Areas) == 0`: print "This location has no areas", return nil
     - If `cfg.ScopedPageIndex <= 0`: print "You're on the first page!", return nil
@@ -59,7 +59,7 @@ Several foundational pieces are already in place: the `Location` struct, `GetLoc
     - Print each area name in the slice `[start:end]`
     - _Requirements: 2.2, 2.4, 2.5, 2.6, 2.7_
 
-  - [~] 2.3 Write property test for pagination correctness
+  - [x] 2.3 Write property test for pagination correctness
     - **Property 4: Pagination Correctness**
     - **Validates: Requirements 2.1, 2.2, 2.6**
     - Use `rapid` to generate area lists of 0-100 items and random page indices, verify map returns correct slice and never exceeds 20 elements
